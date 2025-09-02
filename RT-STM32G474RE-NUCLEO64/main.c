@@ -2,7 +2,7 @@
 #include "hal.h"
 #include "chprintf.h"
 
-#define CUBE_DATA_SIZE 54
+#define CUBE_DATA_SIZE 44
 #define BAUD_RATE 115200
 
 uint8_t cube_state[CUBE_DATA_SIZE];
@@ -18,17 +18,22 @@ static SerialConfig serial_cfg = {
     .cr3 = 0
 };
 
-static THD_WORKING_AREA(waSerialThread, 256);
+static THD_WORKING_AREA(waSerialThread, 512);
 static THD_FUNCTION(SerialThread, arg) {
     (void)arg;
     uint8_t data_index = 0;
     bool receiving_data = false;
-    bool start_marker_received = false;
+    uint8_t start_marker_index = 0;
+    uint8_t end_marker_index = 0;
+
+    // Markers matching Python code
+    static const uint8_t start_marker[] = "CUBE_START|";
+    static const uint8_t end_marker[] = "|CUBE_END";
 
     chRegSetThreadName("Serial");
 
     while (true) {
-        msg_t char_received = sdGetTimeout(&SD2, TIME_MS2I(100));
+        msg_t char_received = sdGetTimeout(&SD2, TIME_MS2I(50));
 
         if (char_received == MSG_TIMEOUT) {
             continue;
@@ -36,53 +41,67 @@ static THD_FUNCTION(SerialThread, arg) {
 
         uint8_t received_char = (uint8_t)char_received;
 
-        if (!start_marker_received) {
-            static const uint8_t start_marker[] = "START";
-            static uint8_t start_index = 0;
-
-            if (received_char == start_marker[start_index]) {
-                start_index++;
-                if (start_index == sizeof(start_marker) - 1) {
-                    start_marker_received = true;
-                    start_index = 0;
+        if (!receiving_data) {
+            // Looking for start marker "CUBE_START|"
+            if (received_char == start_marker[start_marker_index]) {
+                start_marker_index++;
+                if (start_marker_index == sizeof(start_marker) - 1) { // -1 for null terminator
+                    // Start marker complete, begin receiving data
                     receiving_data = true;
+                    start_marker_index = 0;
                     data_index = 0;
-                    chprintf((BaseSequentialStream *)&SD2, "START received\r\n");
+                    chprintf((BaseSequentialStream *)&SD2, "Start marker received, waiting for data...\r\n");
                 }
             } else {
-                start_index = 0;
+                // Reset start marker detection on mismatch
+                start_marker_index = 0;
             }
-        }
-        else if (receiving_data) {
-            static const uint8_t end_marker[] = "END";
-            static uint8_t end_index = 0;
-
-            if (received_char == end_marker[end_index]) {
-                end_index++;
-                if (end_index == sizeof(end_marker) - 1) {
+        } else {
+            // We are receiving data, check for end marker
+            if (received_char == end_marker[end_marker_index]) {
+                end_marker_index++;
+                if (end_marker_index == sizeof(end_marker) - 1) { // -1 for null terminator
+                    // End marker complete, data transmission finished
                     receiving_data = false;
-                    start_marker_received = false;
-                    end_index = 0;
-                    new_data_received = true;
-                    chprintf((BaseSequentialStream *)&SD2, "END received\r\n");
-                    send_acknowledgment();
+                    end_marker_index = 0;
+
+                    if (data_index == CUBE_DATA_SIZE) {
+                        new_data_received = true;
+                        chprintf((BaseSequentialStream *)&SD2, "End marker received, data complete (%d bytes)\r\n", data_index);
+                        send_acknowledgment();
+                    } else {
+                        chprintf((BaseSequentialStream *)&SD2, "End marker received but wrong data size: %d/%d bytes\r\n",
+                                data_index, CUBE_DATA_SIZE);
+                    }
                 }
             } else {
-                if (end_index > 0) {
-                    for (uint8_t i = 0; i < end_index; i++) {
+                if (end_marker_index > 0) {
+                    // We were partially matching end marker but got wrong char
+                    // Add the partially matched end marker bytes to data
+                    for (uint8_t i = 0; i < end_marker_index; i++) {
                         if (data_index < CUBE_DATA_SIZE) {
                             cube_state[data_index++] = end_marker[i];
+                        } else {
+                            chprintf((BaseSequentialStream *)&SD2, "Buffer overflow during end marker recovery!\r\n");
+                            receiving_data = false;
+                            break;
                         }
                     }
-                    end_index = 0;
-                }
+                    end_marker_index = 0;
 
-                if (data_index < CUBE_DATA_SIZE) {
-                    cube_state[data_index++] = received_char;
+                    // Now add the current character
+                    if (receiving_data && data_index < CUBE_DATA_SIZE) {
+                        cube_state[data_index++] = received_char;
+                    }
                 } else {
-                    receiving_data = false;
-                    start_marker_received = false;
-                    chprintf((BaseSequentialStream *)&SD2, "Buffer overflow!\r\n");
+                    // Normal data reception
+                    if (data_index < CUBE_DATA_SIZE) {
+                        cube_state[data_index++] = received_char;
+                    } else {
+                        // Buffer overflow
+                        chprintf((BaseSequentialStream *)&SD2, "Buffer overflow at index %d!\r\n", data_index);
+                        receiving_data = false;
+                    }
                 }
             }
         }
