@@ -16,3 +16,8 @@ ENV/
 # Mac / Linux / Windows junk
 .DS_Store
 Thumbs.db
+
+# ChibiOS
+build/
+debug/
+.dep/
