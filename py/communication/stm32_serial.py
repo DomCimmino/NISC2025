@@ -56,6 +56,7 @@ class STM32Communicator:
             time.sleep(0.1)
             
             cube_data = cube_state.to_serial_format()
+            print(f"Sending cube data: {cube_data}")
             self.serial_port.write(cube_data)
             self.serial_port.write(b'\nEND\n')
         

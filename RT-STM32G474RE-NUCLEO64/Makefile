@@ -109,6 +109,7 @@ include $(CHIBIOS)/os/common/ports/ARMv7-M-ALT/compilers/GCC/mk/port.mk
 #include $(CHIBIOS)/os/common/ports/ARMv7-M/compilers/GCC/mk/port.mk
 # Auto-build files in ./source recursively.
 include $(CHIBIOS)/tools/mk/autobuild.mk
+include $(CHIBIOS)/os/hal/lib/streams/streams.mk
 # Other files (optional).
 
 # Define linker script file here
