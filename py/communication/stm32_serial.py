@@ -52,7 +52,6 @@ class STM32Communicator:
             self.serial_port.close()
         self.connected = False
     
-    def send_cube_state(self, cube_state):
         """Send cube state to STM32 with detailed debugging"""
         if not self.connected:
             raise Exception("Not connected to STM32")
@@ -140,6 +139,35 @@ class STM32Communicator:
             traceback.print_exc()
             return False
     
+    def send_cube_state(self, cube_state):
+        """Send cube state as 54 raw chars"""
+        if not self.connected:
+            raise Exception("Not connected to STM32")
+    
+        try:
+            self.serial_port.reset_input_buffer()
+            self.serial_port.reset_output_buffer()
+    
+            # Convert numeric cube state → chars
+            color_map = {0: 'W', 1: 'Y', 2: 'R', 3: 'O', 4: 'B', 5: 'G'}
+            char_data = ''.join(color_map.get(v, '?') for v in cube_state.to_serial_format())
+    
+            if len(char_data) != 54:
+                raise ValueError("Cube state must be 54 chars")
+    
+            print(f"Sending raw cube state: {char_data}")
+            self.serial_port.write(char_data.encode())
+    
+        except Exception as e:
+            print(f"Error sending data: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+    
+        return True
+
+
+
     def receive_data(self):
         """Receive data from STM32"""
         if self.connected:

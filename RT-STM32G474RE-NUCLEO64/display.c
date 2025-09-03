@@ -1,131 +1,100 @@
 #include "display.h"
-#include "ch.h"
-#include "hal.h"
 #include "gfx.h"
+#include <stdlib.h>
+#include <string.h>
 
+#define R_SIZE          3
+#define CELL            18
+#define GAP             2
+#define FACE_BORDER     2
+#define NET_GAP         8
 
-#define COLOR_WHITE     GFX_WHITE
-#define COLOR_YELLOW    GFX_YELLOW
-#define COLOR_RED       GFX_RED
-#define COLOR_ORANGE    GFX_ORANGE
-#define COLOR_BLUE      GFX_BLUE
-#define COLOR_BLACK     GFX_BLACK
-#define COLOR_GREEN     HTML2COLOR(0x009000)
+static gColor kPalette[COL_CNT];
+static unsigned char stickers[FACE_CNT][R_SIZE][R_SIZE];
 
-#define STICKER_SIZE 40
-#define STICKER_SPACING 4
-#define FACE_MARGIN 20
-
-#define JOY_PORT_1      GPIOB
-#define JOY_PORT_2      GPIOC
-#define JOY_UP_PIN          0
-#define JOY_DOWN_PIN        4
-#define JOY_LEFT_PIN        6
-#define JOY_RIGHT_PIN       0
-#define JOY_CENTRE_PIN      7
-
-static CubeFace current_face = FACE_U;
-
-static gColor get_color_from_value(uint8_t color_value) {
-    switch(color_value) {
-        case 0: return COLOR_WHITE;
-        case 1: return COLOR_YELLOW;
-        case 2: return COLOR_RED;
-        case 3: return COLOR_ORANGE;
-        case 4: return COLOR_BLUE;
-        case 5: return COLOR_GREEN;
-        default: return COLOR_BLACK;
-    }
+static void initPalette(void) {
+    kPalette[COL_W] = GFX_WHITE;
+    kPalette[COL_Y] = GFX_YELLOW;
+    kPalette[COL_R] = GFX_RED;
+    kPalette[COL_O] = GFX_ORANGE;
+    kPalette[COL_B] = GFX_BLUE;
+    kPalette[COL_G] = HTML2COLOR(0x009000);
 }
 
-static void get_face_data(uint8_t cube_state[54], CubeFace face, uint8_t face_data[9]) {
-    uint8_t start_index = face * 9;
-    for (int i = 0; i < 9; i++) {
-        face_data[i] = cube_state[start_index + i];
-    }
-}
-
-void draw_current_face(uint8_t cube_state[54]) {
-    gdispClear(COLOR_BLACK);
-
-    uint8_t face_data[9];
-    get_face_data(cube_state, current_face, face_data);
-
-    uint16_t face_x = (gdispGetWidth() - (3 * STICKER_SIZE + 2 * STICKER_SPACING)) / 2;
-    uint16_t face_y = 50;
-
-    for (int row = 0; row < 3; row++) {
-        for (int col = 0; col < 3; col++) {
-            uint8_t color_value = face_data[row * 3 + col];
-            gColor color = get_color_from_value(color_value);
-
-            uint16_t sticker_x = face_x + col * (STICKER_SIZE + STICKER_SPACING);
-            uint16_t sticker_y = face_y + row * (STICKER_SIZE + STICKER_SPACING);
-
-            gdispFillArea(sticker_x, sticker_y, STICKER_SIZE, STICKER_SIZE, color);
-            gdispDrawBox(sticker_x, sticker_y, STICKER_SIZE, STICKER_SIZE, COLOR_BLACK);
-        }
-    }
-
-    show_face_number(current_face);
-}
-
-void show_face_number(uint8_t face_num) {
-    uint16_t y_pos = 180;
-    uint16_t x_start = (gdispGetWidth() - (NUM_FACES * 20 + (NUM_FACES-1) * 5)) / 2;
-
-    for (int i = 0; i < NUM_FACES; i++) {
-        uint16_t x_pos = x_start + i * 25;
-
-        if (i == face_num) {
-            gdispFillCircle(x_pos, y_pos, 8, COLOR_WHITE);
-            gdispDrawCircle(x_pos, y_pos, 8, COLOR_BLACK);
-        } else {
-            gdispFillCircle(x_pos, y_pos, 6, GFX_GRAY);
-            gdispDrawCircle(x_pos, y_pos, 6, COLOR_BLACK);
-        }
-    }
-}
-
-static void joystick_init(void) {
-      palSetPadMode(JOY_PORT_2, JOY_UP_PIN, PAL_MODE_INPUT_PULLUP);            //UP
-      palSetPadMode(JOY_PORT_1, JOY_DOWN_PIN, PAL_MODE_INPUT_PULLUP);          //DOWN
-      palSetPadMode(JOY_PORT_1, JOY_LEFT_PIN, PAL_MODE_INPUT_PULLUP);          //LEFT
-      palSetPadMode(JOY_PORT_1, JOY_RIGHT_PIN, PAL_MODE_INPUT_PULLUP);         //RIGHT
-      palSetPadMode(JOY_PORT_2, JOY_CENTRE_PIN, PAL_MODE_INPUT_PULLUP);      //CENTRE
-}
-
-static bool is_button_pressed(ioportid_t port, uint16_t pad) {
-    return palReadPad(port, pad) == PAL_LOW;
-}
-
-static bool is_center_pressed(void) {
-    return is_button_pressed(JOY_PORT_2, JOY_CENTRE_PIN);
-}
-
-
-void handle_navigation(void) {
-    static uint32_t last_press_time = 0;
-    uint32_t current_time = chVTGetSystemTime();
-
-    if (current_time - last_press_time < TIME_MS2I(200)) {
-        return;
-    }
-
-    if (is_center_pressed()) {
-        current_face = (current_face + 1) % NUM_FACES;
-        last_press_time = current_time;
-    }
+void rubikInit(void) {
+    initPalette();
+    srand(gfxSystemTicks());
+    for (int f=0; f<FACE_CNT; ++f)
+      for (int r=0; r<R_SIZE; ++r)
+        for (int c=0; c<R_SIZE; ++c)
+          stickers[f][r][c] = (unsigned char)(f % COL_CNT);
 }
 
 void display_init(void) {
     gfxInit();
+    initPalette();
+    gdispClear(GFX_BLACK);
+}
 
-    joystick_init();
+void rubikUpdateFromCubeState(char cube_state[54]) {
+    for (int f = 0; f < FACE_CNT; f++) {
+        for (int r = 0; r < R_SIZE; r++) {
+            for (int c = 0; c < R_SIZE; c++) {
+                char ch = cube_state[f*R_SIZE*R_SIZE + r*R_SIZE + c];
+                switch(ch) {
+                    case 'W': stickers[f][r][c] = COL_W; break;
+                    case 'Y': stickers[f][r][c] = COL_Y; break;
+                    case 'R': stickers[f][r][c] = COL_R; break;
+                    case 'O': stickers[f][r][c] = COL_O; break;
+                    case 'B': stickers[f][r][c] = COL_B; break;
+                    case 'G': stickers[f][r][c] = COL_G; break;
+                    default:  stickers[f][r][c] = COL_W; break;
+                }
+            }
+        }
+    }
+}
 
-    gdispClear(COLOR_BLACK);
+typedef struct { int fx, fy; } FacePos;
 
-    while (!is_center_pressed()) {
-        chThdSleepMilliseconds(100);
+static FacePos facePos(RubikFace f) {
+    switch (f) {
+        case FACE_U: return (FacePos){ 1,0 };
+        case FACE_L: return (FacePos){ 0,1 };
+        case FACE_F: return (FacePos){ 1,1 };
+        case FACE_R: return (FacePos){ 2,1 };
+        case FACE_B: return (FacePos){ 3,1 };
+        case FACE_D: return (FacePos){ 1,2 };
+        default:     return (FacePos){ 1,1 };
+    }
+}
+
+static inline int facePixelSize(void) {
+    return FACE_BORDER*2 + (R_SIZE*CELL) + ((R_SIZE-1)*GAP);
+}
+
+static void drawSticker(gCoord x, gCoord y, gColor col) {
+    gdispFillArea(x, y, CELL, CELL, col);
+    gdispDrawBox(x, y, CELL, CELL, GFX_BLACK);
+}
+
+static void drawFace(gCoord x0, gCoord y0, RubikFace f) {
+    const int FP = facePixelSize();
+    gdispFillArea(x0, y0, FP, FP, GFX_BLACK); // bordo esterno
+    gdispFillArea(x0+FACE_BORDER, y0+FACE_BORDER, FP-2*FACE_BORDER, FP-2*FACE_BORDER, GFX_GRAY);
+    gCoord sx = x0 + FACE_BORDER, sy = y0 + FACE_BORDER;
+    for (int r=0; r<R_SIZE; ++r)
+        for (int c=0; c<R_SIZE; ++c)
+            drawSticker(sx + c*(CELL+GAP), sy + r*(CELL+GAP), kPalette[stickers[f][r][c]]);
+}
+
+void rubikDrawNetFromCube(char cube_state[54], gCoord ox, gCoord oy) {
+    rubikUpdateFromCubeState(cube_state);
+    const int FP = facePixelSize(); (void)FP;
+    for (int f=0; f<FACE_CNT; ++f) {
+        FacePos p = facePos((RubikFace)f);
+        gCoord x = ox + p.fx*(facePixelSize() + NET_GAP);
+        gCoord y = oy + p.fy*(facePixelSize() + NET_GAP);
+        drawFace(x, y, (RubikFace)f);
     }
 }
