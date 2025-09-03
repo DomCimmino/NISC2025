@@ -1,5 +1,6 @@
 #include "display.h"
 #include "gfx.h"
+#include "step_solver.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -8,6 +9,14 @@
 #define GAP             2
 #define FACE_BORDER     2
 #define NET_GAP         8
+
+#define JOY_PORT_1      GPIOB
+#define JOY_PORT_2      GPIOC
+#define JOY_UP_PIN          0
+#define JOY_DOWN_PIN        4
+#define JOY_LEFT_PIN        6
+#define JOY_RIGHT_PIN       0
+#define JOY_CENTRE_PIN      7
 
 static gColor kPalette[COL_CNT];
 static unsigned char stickers[FACE_CNT][R_SIZE][R_SIZE];
@@ -23,6 +32,11 @@ static void initPalette(void) {
 
 void rubikInit(void) {
     initPalette();
+    palSetPadMode(JOY_PORT_2, JOY_UP_PIN, PAL_MODE_INPUT_PULLUP);            //UP
+    palSetPadMode(JOY_PORT_1, JOY_DOWN_PIN, PAL_MODE_INPUT_PULLUP);          //DOWN
+    palSetPadMode(JOY_PORT_1, JOY_LEFT_PIN, PAL_MODE_INPUT_PULLUP);          //LEFT
+    palSetPadMode(JOY_PORT_1, JOY_RIGHT_PIN, PAL_MODE_INPUT_PULLUP);         //RIGHT
+    palSetPadMode(JOY_PORT_2, JOY_CENTRE_PIN, PAL_MODE_INPUT_PULLUP);        //CENTRE
     srand(gfxSystemTicks());
     for (int f=0; f<FACE_CNT; ++f)
       for (int r=0; r<R_SIZE; ++r)
@@ -96,5 +110,32 @@ void rubikDrawNetFromCube(char cube_state[54], gCoord ox, gCoord oy) {
         gCoord x = ox + p.fx*(facePixelSize() + NET_GAP);
         gCoord y = oy + p.fy*(facePixelSize() + NET_GAP);
         drawFace(x, y, (RubikFace)f);
+    }
+}
+
+static bool is_button_pressed(ioportid_t port, uint16_t pad) {
+    return palReadPad(port, pad) == PAL_LOW;
+}
+
+static bool is_center_pressed(void) {
+    return is_button_pressed(JOY_PORT_2, JOY_CENTRE_PIN);
+}
+
+void handle_navigation(char cube_state[54]) {
+    static uint32_t last_press_time = 0;
+    static bool solving = false;
+    uint32_t current_time = chVTGetSystemTime();
+
+    if (current_time - last_press_time < TIME_MS2I(200)) {
+        return;
+    }
+
+    if (is_center_pressed()) {
+        last_press_time = current_time;
+        if (!solving) {
+            solving = true;
+            solve_cube_step_by_step((char *)cube_state, 400);
+            solving = false;
+        }
     }
 }

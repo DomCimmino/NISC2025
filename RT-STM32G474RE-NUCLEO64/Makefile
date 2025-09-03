@@ -127,6 +127,7 @@ CSRC = $(ALLCSRC) \
        $(TESTSRC) \
        $(GFXSRC) \
        moves.c \
+       step_solver.c \
        display.c \
        main.c
 

@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QSpacerItem, QSizePolicy)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QFont
+import random
 
 from models.cube_state import FaceColor, CubeState
 from communication.stm32_serial import STM32Communicator
@@ -113,7 +114,7 @@ class CubeUI(QMainWindow):
     
     def init_ui(self):
         self.setWindowTitle('Rubik\'s Cube Controller')
-        self.setGeometry(100, 100, 900, 600)
+        self.setGeometry(100, 100, 900, 700)  # Increased height for new button
         
         # Main central widget
         central_widget = QWidget()
@@ -248,13 +249,15 @@ class CubeUI(QMainWindow):
         self.reset_all_btn = QPushButton("🗑️ Reset All Faces")
         self.solve_btn = QPushButton("✅ Set Face Solved")
         self.solve_all_btn = QPushButton("🏆 Set All Solved")
+        self.random_btn = QPushButton("🎲 Random Solvable Config")  # New button
         
         action_buttons = [
             self.send_btn,
             self.reset_btn,
             self.reset_all_btn,
             self.solve_btn,
-            self.solve_all_btn
+            self.solve_all_btn,
+            self.random_btn  # Added new button
         ]
         
         for btn in action_buttons:
@@ -285,6 +288,7 @@ class CubeUI(QMainWindow):
         self.reset_all_btn.clicked.connect(self.reset_all_faces)
         self.solve_btn.clicked.connect(self.set_face_solved)
         self.solve_all_btn.clicked.connect(self.set_all_solved)
+        self.random_btn.clicked.connect(self.generate_random_solvable)  # New connection
         self.face_combo.currentTextChanged.connect(self.face_changed)
         
         # Add widgets to main layout
@@ -382,6 +386,154 @@ class CubeUI(QMainWindow):
             self.cube_state.set_face(face, np.full((3, 3), color))
         self.load_face(self.current_face)
         self.statusBar().showMessage("Set all faces to solved state")
+    
+    def generate_random_solvable(self):
+        """Generate a random but solvable cube configuration"""
+        # Start with a solved cube
+        self.set_all_solved()
+        
+        # Apply a series of random moves to scramble it
+        moves = ["U", "U'", "D", "D'", "F", "F'", "B", "B'", "L", "L'", "R", "R'"]
+        num_moves = random.randint(10, 20)  # Apply 10-20 random moves
+        
+        for _ in range(num_moves):
+            move = random.choice(moves)
+            self.apply_move(move)
+        
+        self.load_face(self.current_face)
+        self.statusBar().showMessage(f"Generated random solvable configuration ({num_moves} moves)")
+    
+    def apply_move(self, move):
+        """Apply a cube move to the current state"""
+        # Get all face data
+        faces = {}
+        for face_name in ['U', 'D', 'F', 'B', 'L', 'R']:
+            faces[face_name] = self.cube_state.get_face(face_name).copy()
+        
+        # Apply the move by rotating the appropriate face and adjacent stickers
+        if move == "U":
+            # Rotate U face clockwise
+            faces['U'] = np.rot90(faces['U'], 3)
+            # Rotate top layer of adjacent faces
+            temp = faces['F'][0, :].copy()
+            faces['F'][0, :] = faces['R'][0, :]
+            faces['R'][0, :] = faces['B'][0, :]
+            faces['B'][0, :] = faces['L'][0, :]
+            faces['L'][0, :] = temp
+            
+        elif move == "U'":
+            # Rotate U face counterclockwise
+            faces['U'] = np.rot90(faces['U'], 1)
+            # Rotate top layer of adjacent faces
+            temp = faces['F'][0, :].copy()
+            faces['F'][0, :] = faces['L'][0, :]
+            faces['L'][0, :] = faces['B'][0, :]
+            faces['B'][0, :] = faces['R'][0, :]
+            faces['R'][0, :] = temp
+            
+        elif move == "D":
+            # Rotate D face clockwise
+            faces['D'] = np.rot90(faces['D'], 3)
+            # Rotate bottom layer of adjacent faces
+            temp = faces['F'][2, :].copy()
+            faces['F'][2, :] = faces['L'][2, :]
+            faces['L'][2, :] = faces['B'][2, :]
+            faces['B'][2, :] = faces['R'][2, :]
+            faces['R'][2, :] = temp
+            
+        elif move == "D'":
+            # Rotate D face counterclockwise
+            faces['D'] = np.rot90(faces['D'], 1)
+            # Rotate bottom layer of adjacent faces
+            temp = faces['F'][2, :].copy()
+            faces['F'][2, :] = faces['R'][2, :]
+            faces['R'][2, :] = faces['B'][2, :]
+            faces['B'][2, :] = faces['L'][2, :]
+            faces['L'][2, :] = temp
+            
+        elif move == "F":
+            # Rotate F face clockwise
+            faces['F'] = np.rot90(faces['F'], 3)
+            # Rotate front layer of adjacent faces
+            temp = faces['U'][2, :].copy()
+            faces['U'][2, :] = np.flip(faces['L'][:, 2])
+            faces['L'][:, 2] = faces['D'][0, :]
+            faces['D'][0, :] = np.flip(faces['R'][:, 0])
+            faces['R'][:, 0] = temp
+            
+        elif move == "F'":
+            # Rotate F face counterclockwise
+            faces['F'] = np.rot90(faces['F'], 1)
+            # Rotate front layer of adjacent faces
+            temp = faces['U'][2, :].copy()
+            faces['U'][2, :] = faces['R'][:, 0]
+            faces['R'][:, 0] = np.flip(faces['D'][0, :])
+            faces['D'][0, :] = faces['L'][:, 2]
+            faces['L'][:, 2] = np.flip(temp)
+            
+        elif move == "B":
+            # Rotate B face clockwise
+            faces['B'] = np.rot90(faces['B'], 3)
+            # Rotate back layer of adjacent faces
+            temp = faces['U'][0, :].copy()
+            faces['U'][0, :] = faces['R'][:, 2]
+            faces['R'][:, 2] = np.flip(faces['D'][2, :])
+            faces['D'][2, :] = faces['L'][:, 0]
+            faces['L'][:, 0] = np.flip(temp)
+            
+        elif move == "B'":
+            # Rotate B face counterclockwise
+            faces['B'] = np.rot90(faces['B'], 1)
+            # Rotate back layer of adjacent faces
+            temp = faces['U'][0, :].copy()
+            faces['U'][0, :] = np.flip(faces['L'][:, 0])
+            faces['L'][:, 0] = faces['D'][2, :]
+            faces['D'][2, :] = np.flip(faces['R'][:, 2])
+            faces['R'][:, 2] = temp
+            
+        elif move == "L":
+            # Rotate L face clockwise
+            faces['L'] = np.rot90(faces['L'], 3)
+            # Rotate left layer of adjacent faces
+            temp = faces['U'][:, 0].copy()
+            faces['U'][:, 0] = np.flip(faces['B'][:, 2])
+            faces['B'][:, 2] = np.flip(faces['D'][:, 0])
+            faces['D'][:, 0] = faces['F'][:, 0]
+            faces['F'][:, 0] = temp
+            
+        elif move == "L'":
+            # Rotate L face counterclockwise
+            faces['L'] = np.rot90(faces['L'], 1)
+            # Rotate left layer of adjacent faces
+            temp = faces['U'][:, 0].copy()
+            faces['U'][:, 0] = faces['F'][:, 0]
+            faces['F'][:, 0] = faces['D'][:, 0]
+            faces['D'][:, 0] = np.flip(faces['B'][:, 2])
+            faces['B'][:, 2] = np.flip(temp)
+            
+        elif move == "R":
+            # Rotate R face clockwise
+            faces['R'] = np.rot90(faces['R'], 3)
+            # Rotate right layer of adjacent faces
+            temp = faces['U'][:, 2].copy()
+            faces['U'][:, 2] = faces['F'][:, 2]
+            faces['F'][:, 2] = faces['D'][:, 2]
+            faces['D'][:, 2] = np.flip(faces['B'][:, 0])
+            faces['B'][:, 0] = np.flip(temp)
+            
+        elif move == "R'":
+            # Rotate R face counterclockwise
+            faces['R'] = np.rot90(faces['R'], 1)
+            # Rotate right layer of adjacent faces
+            temp = faces['U'][:, 2].copy()
+            faces['U'][:, 2] = np.flip(faces['B'][:, 0])
+            faces['B'][:, 0] = np.flip(faces['D'][:, 2])
+            faces['D'][:, 2] = faces['F'][:, 2]
+            faces['F'][:, 2] = temp
+        
+        # Update all faces in the cube state
+        for face_name, face_data in faces.items():
+            self.cube_state.set_face(face_name, face_data)
     
     def previous_face(self):
         current_index = self.face_combo.currentIndex()

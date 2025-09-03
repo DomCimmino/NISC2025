@@ -79,6 +79,7 @@ int main(void) {
 
     while (true) {
         process_cube_data();
+        handle_navigation(cube_state);
         chThdSleepMilliseconds(100);
     }
 }
