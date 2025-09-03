@@ -1,12 +1,14 @@
 #include "ch.h"
 #include "hal.h"
 #include "chprintf.h"
+#include "display.h"
 
 #define CUBE_DATA_SIZE 44
 #define BAUD_RATE 115200
 
 uint8_t cube_state[CUBE_DATA_SIZE];
 bool new_data_received = false;
+bool display_initialized = false;
 
 void process_cube_data(void);
 void send_acknowledgment(void);
@@ -108,24 +110,38 @@ static THD_FUNCTION(SerialThread, arg) {
     }
 }
 
+static THD_WORKING_AREA(waDisplayThread, 512);
+static THD_FUNCTION(DisplayThread, arg) {
+    (void)arg;
+    chRegSetThreadName("Display");
+
+    while (true) {
+        handle_navigation();
+
+        if (display_initialized) {
+            draw_current_face(cube_state);
+        }
+
+        chThdSleepMilliseconds(50);
+    }
+}
+
 void send_acknowledgment(void) {
     chprintf((BaseSequentialStream *)&SD2, "ACK\r\n");
 }
 
 void process_cube_data(void) {
-    if (new_data_received) {
-        chprintf((BaseSequentialStream *)&SD2, "Received cube data:\r\n");
-
-        for (int i = 0; i < CUBE_DATA_SIZE; i++) {
-            chprintf((BaseSequentialStream *)&SD2, "%d ", cube_state[i]);
-            if ((i + 1) % 9 == 0) {
-                chprintf((BaseSequentialStream *)&SD2, "\r\n");
-            }
-        }
-        chprintf((BaseSequentialStream *)&SD2, "\r\n");
-
-        new_data_received = false;
+  if (new_data_received) {
+    chprintf((BaseSequentialStream *)&SD2, "Drawing cube on display...\r\n");
+    if (!display_initialized) {
+      draw_current_face(cube_state);
+      display_initialized = true;
     }
+
+    chprintf((BaseSequentialStream *)&SD2, "Cube displayed successfully\r\n");
+
+    new_data_received = false;
+  }
 }
 
 
@@ -137,12 +153,15 @@ int main(void) {
   palSetLineMode(PAL_LINE(GPIOA, 2), PAL_MODE_ALTERNATE(7));
   palSetLineMode(PAL_LINE(GPIOA, 3), PAL_MODE_ALTERNATE(7));
 
+  display_init();
+
   sdStart(&SD2, &serial_cfg);
 
   chprintf((BaseSequentialStream *)&SD2, "Rubik's Cube Receiver Ready\r\n");
   chprintf((BaseSequentialStream *)&SD2, "Waiting for data...\r\n");
 
   chThdCreateStatic(waSerialThread, sizeof(waSerialThread), NORMALPRIO, SerialThread, NULL);
+  chThdCreateStatic(waDisplayThread, sizeof(waDisplayThread), NORMALPRIO, DisplayThread, NULL);
 
   while (true) {
       process_cube_data();
