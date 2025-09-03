@@ -111,11 +111,11 @@ include $(CHIBIOS)/os/common/ports/ARMv7-M-ALT/compilers/GCC/mk/port.mk
 #include $(CHIBIOS)/os/common/ports/ARMv7-M/compilers/GCC/mk/port.mk
 # Auto-build files in ./source recursively.
 include $(CHIBIOS)/tools/mk/autobuild.mk
-include $(CHIBIOS)/os/hal/lib/streams/streams.mk
 # Other files (optional).
+include $(CHIBIOS)/os/hal/lib/streams/streams.mk
 include $(GFXLIB)/gfx.mk
 include $(GFXLIB)/drivers/gdisp/ILI9341/driver.mk                  # display driver
-include $(GFXLIB)/drivers/ginput/toggle/Pal/driver.mk  
+include $(GFXLIB)/drivers/ginput/toggle/Pal/driver.mk
 
 # Define linker script file here
 LDSCRIPT= $(STARTUPLD)/STM32G474xE.ld
@@ -169,7 +169,7 @@ UINCDIR =
 ULIBDIR =
 
 # List all user libraries here
-ULIBS =
+ULIBS = -lm
 
 #
 # End of user section

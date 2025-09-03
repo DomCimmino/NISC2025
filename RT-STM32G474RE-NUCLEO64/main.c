@@ -2,8 +2,9 @@
 #include "hal.h"
 #include "chprintf.h"
 #include "display.h"
+#include "gfx.h"
 
-#define CUBE_DATA_SIZE 44
+#define CUBE_DATA_SIZE 54
 #define BAUD_RATE 115200
 
 uint8_t cube_state[CUBE_DATA_SIZE];
@@ -166,6 +167,7 @@ int main(void) {
   while (true) {
       process_cube_data();
       chThdSleepMilliseconds(100);
+      gfxSleepMilliseconds(10000);
   }
 }
 
