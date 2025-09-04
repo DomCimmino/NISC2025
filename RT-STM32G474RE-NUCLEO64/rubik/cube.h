@@ -17,7 +17,7 @@ typedef struct {
     int cubies[6][9];
 } Cube;
 
-void moves(char moves[]);
+void moves(Cube* cube, const char* moves);
 void r(Cube* cube, int n);
 void l(Cube* cube, int n);
 void u(Cube* cube, int n);

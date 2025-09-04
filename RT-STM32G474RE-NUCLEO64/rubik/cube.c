@@ -1,4 +1,5 @@
 #include "cube.h"
+#include <string.h>
 
 void init_cube(Cube* cube, char cube_state[TOTAL_STICKER]){
   for(int j=0; j<TOTAL_STICKER; j++){
@@ -39,9 +40,34 @@ void setCube(Cube* cube, int cubies[NUM_CUBE_STICKER_PER_FACE][NUM_CUBE_FACE]){
   }
 }
 
+void moves(Cube* cube, const char* moves){
+  for (int i=0; i<strlen(moves); ++i) {
+      switch (moves[i]) {
+        case 'U':
+          u(cube, 1);
+          break;
+        case 'D':
+          d(cube, 1);
+          break;
+        case 'R':
+          r(cube, 1);
+          break;
+        case 'L':
+          l(cube, 1);
+          break;
+        case 'F':
+          f(cube, 1);
+          break;
+        case 'B':
+          b(cube, 1);
+          break;
+      }
+    }
+}
+
 void r(Cube* cube, int n){
   int newCubies[NUM_CUBE_STICKER_PER_FACE][NUM_CUBE_FACE];
-  createTempCubies(&cube, newCubies);
+  createTempCubies(cube, newCubies);
 
   if(n>=0){
     for(int i=0; i<n; i++){
@@ -76,13 +102,13 @@ void r(Cube* cube, int n){
       newCubies[7][3] = cube->cubies[5][3];
       newCubies[8][3] = cube->cubies[2][3];
     }
-    setCube(&cube, newCubies);
+    setCube(cube, newCubies);
   }
 }
 
 void l(Cube* cube, int n){
   int newCubies[NUM_CUBE_STICKER_PER_FACE][NUM_CUBE_FACE];
-  createTempCubies(&cube, newCubies);
+  createTempCubies(cube, newCubies);
 
   if(n>=0){
     for(int i=0; i<n; i++){
@@ -117,14 +143,14 @@ void l(Cube* cube, int n){
       newCubies[7][5] = cube->cubies[5][5];
       newCubies[8][5] = cube->cubies[2][5];
 
-      setCube(&cube, newCubies);
+      setCube(cube, newCubies);
     }
   }
 }
 
 void u(Cube* cube, int n){
   int newCubies[NUM_CUBE_STICKER_PER_FACE][NUM_CUBE_FACE];
-  createTempCubies(&cube, newCubies);
+  createTempCubies(cube, newCubies);
 
   if(n>=0){
     for(int i=0; i<n; i++){
@@ -159,14 +185,14 @@ void u(Cube* cube, int n){
       newCubies[7][1] = cube->cubies[5][1];
       newCubies[8][1] = cube->cubies[2][1];
 
-      setCube(&cube, newCubies);
+      setCube(cube, newCubies);
     }
   }
 }
 
 void d(Cube* cube, int n){
   int newCubies[NUM_CUBE_STICKER_PER_FACE][NUM_CUBE_FACE];
-  createTempCubies(&cube, newCubies);
+  createTempCubies(cube, newCubies);
 
   if(n>=0){
     for(int i=0; i<n; i++){
@@ -201,14 +227,14 @@ void d(Cube* cube, int n){
       newCubies[7][0] = cube->cubies[5][0];
       newCubies[8][0] = cube->cubies[2][0];
 
-      setCube(&cube, newCubies);
+      setCube(cube, newCubies);
     }
   }
 }
 
 void f(Cube* cube, int n){
   int newCubies[NUM_CUBE_STICKER_PER_FACE][NUM_CUBE_FACE];
-  createTempCubies(&cube, newCubies);
+  createTempCubies(cube, newCubies);
 
   if(n>=0){
     for(int i=0; i<n; i++){
@@ -243,14 +269,14 @@ void f(Cube* cube, int n){
       newCubies[7][2] = cube->cubies[5][2];
       newCubies[8][2] = cube->cubies[2][2];
 
-      setCube(&cube, newCubies);
+      setCube(cube, newCubies);
     }
   }
 }
 
 void b(Cube* cube, int n){
   int newCubies[NUM_CUBE_STICKER_PER_FACE][NUM_CUBE_FACE];
-  createTempCubies(&cube, newCubies);
+  createTempCubies(cube, newCubies);
 
   if(n>=0){
     for(int i=0; i<n; i++){
@@ -285,7 +311,7 @@ void b(Cube* cube, int n){
       newCubies[7][4] = cube->cubies[5][4];
       newCubies[8][4] = cube->cubies[2][4];
 
-      setCube(&cube, newCubies);
+      setCube(cube, newCubies);
     }
   }
 }

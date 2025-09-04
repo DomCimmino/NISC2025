@@ -96,6 +96,8 @@ DEPDIR   := ./.dep
 
 GFXLIB	:= ../../ugfx
 
+RUBIKLIB := ./rubik
+
 # Licensing files.
 include $(CHIBIOS)/os/license/license.mk
 # Startup files.
@@ -126,7 +128,8 @@ LDSCRIPT= $(STARTUPLD)/STM32G474xE.ld
 CSRC = $(ALLCSRC) \
        $(TESTSRC) \
        $(GFXSRC) \
-       cube.c \
+       $(RUBIKLIB)/cube.c \
+       $(RUBIKLIB)/cross.c \
        step_solver.c \
        display.c \
        main.c
