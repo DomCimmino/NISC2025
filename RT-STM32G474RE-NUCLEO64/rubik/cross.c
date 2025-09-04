@@ -7,7 +7,7 @@ static void solveCross(Cube* cube){
     }
 }
 
-static int checkCross(Cube* cube){
+int checkCross(Cube* cube){
   if (!cube->cubies[1][0] &&
       !cube->cubies[3][0] &&
       !cube->cubies[5][0] &&
@@ -22,7 +22,7 @@ static int checkCross(Cube* cube){
     return 1;
 }
 
-static void solveEdge(Cube* cube){
+void solveEdge(Cube* cube){
   for (int side=0; side<6; ++side) {
     for (int edge = 1; edge<9; edge+=2) {
       if (cube->cubies[edge][side] == 0) {

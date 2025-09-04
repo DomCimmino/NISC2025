@@ -130,6 +130,7 @@ CSRC = $(ALLCSRC) \
        $(GFXSRC) \
        $(RUBIKLIB)/cube.c \
        $(RUBIKLIB)/cross.c \
+       $(RUBIKLIB)/corners.c \
        step_solver.c \
        display.c \
        main.c
