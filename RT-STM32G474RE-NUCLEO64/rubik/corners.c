@@ -1,7 +1,7 @@
 #include "corners.h"
 #include "cube.h"
 
-void solveCorners(Cube* cube) {
+static void solveCorners(Cube* cube) {
   while (checkBottomLayer(cube)) {
 
     //get a white corner into the top layer
