@@ -7,6 +7,8 @@
 #define CUBE_DATA_SIZE 54
 #define BAUD_RATE 115200
 
+void process_cube_data(void);
+
 // Cube state storage - 54 raw chars
 char cube_state[CUBE_DATA_SIZE];
 bool new_data_received = false;
@@ -21,7 +23,7 @@ static SerialConfig serial_cfg = {
 };
 
 // Thread for receiving raw cube data
-static THD_WORKING_AREA(waSerialThread, 512);
+static THD_WORKING_AREA(waSerialThread, 2048);
 static THD_FUNCTION(SerialThread, arg) {
     (void)arg;
     chRegSetThreadName("Serial");
@@ -30,8 +32,8 @@ static THD_FUNCTION(SerialThread, arg) {
 
     while (true) {
         msg_t c = sdGetTimeout(&SD2, TIME_MS2I(5000));
-
         if (c == MSG_TIMEOUT) {
+            idx = 0;
             continue;
         }
 
@@ -39,18 +41,16 @@ static THD_FUNCTION(SerialThread, arg) {
 
         if (idx == CUBE_DATA_SIZE) {
             new_data_received = true;
-            idx = 0;  // ricomincia per il prossimo pacchetto
+            process_cube_data();
+            idx = 0;
         }
     }
 }
 
-// Print and display cube data
+
 void process_cube_data(void) {
     if (new_data_received) {
-        chprintf((BaseSequentialStream *)&SD2, "Cube state received:\r\n");
-
-        rubikDrawNetFromCube(cube_state, 10, 10);
-
+        rubikDrawNetFromCube(cube_state, 10, 25);
         new_data_received = false;
     }
 }
@@ -66,13 +66,11 @@ int main(void) {
 
     sdStart(&SD2, &serial_cfg);
 
-    chprintf((BaseSequentialStream *)&SD2, "Rubik's Cube Raw Receiver Ready\r\n");
 
     chThdCreateStatic(waSerialThread, sizeof(waSerialThread),
                       NORMALPRIO, SerialThread, NULL);
 
     while (true) {
-        process_cube_data();
         handle_navigation(cube_state);
         chThdSleepMilliseconds(100);
     }

@@ -27,6 +27,8 @@ static bool solving = false;
 static bool solution_complete = false;
 static uint32_t last_press_time = 0;
 
+gFont font12;
+
 static void initPalette(void) {
     kPalette[COL_W] = GFX_WHITE;
     kPalette[COL_Y] = GFX_YELLOW;
@@ -43,6 +45,9 @@ void rubikInit(void) {
     palSetPadMode(JOY_PORT_1, JOY_LEFT_PIN, PAL_MODE_INPUT_PULLUP);          //LEFT
     palSetPadMode(JOY_PORT_1, JOY_RIGHT_PIN, PAL_MODE_INPUT_PULLUP);         //RIGHT
     palSetPadMode(JOY_PORT_2, JOY_CENTRE_PIN, PAL_MODE_INPUT_PULLUP);        //CENTRE
+
+    font12 = gdispOpenFont("DejaVuSans12");
+
     srand(gfxSystemTicks());
     for (int f=0; f<FACE_CNT; ++f)
       for (int r=0; r<R_SIZE; ++r)
@@ -138,15 +143,15 @@ void display_solver_status(void) {
 
     // Mostra lo stato corrente
     gdispDrawString(10, 5, solver_get_state_name(solver.current_state),
-                   NULL, GFX_WHITE);
+                   font12, GFX_WHITE);
 
     // Mostra la mossa corrente
     gdispDrawString(150, 5, solver_get_current_move(),
-                   NULL, GFX_YELLOW);
+                    font12, GFX_YELLOW);
 
     if (solution_complete) {
         gdispDrawString(250, 5, "COMPLETATO!",
-                       NULL, GFX_GREEN);
+                        font12, GFX_GREEN);
     }
 }
 
@@ -159,7 +164,9 @@ void start_solution(char cube_state[54]) {
 
 // Esegue un passo della risoluzione
 void execute_solution_step(char cube_state[54]) {
-    if (!solving || solution_complete) return;
+    if (solution_complete) {
+      return;
+    }
 
     // Esegui un passo
     solution_complete = solver_execute_step(&solver);
@@ -169,6 +176,8 @@ void execute_solution_step(char cube_state[54]) {
 
     // Aggiorna il display
     display_solver_status();
+
+    rubikDrawNetFromCube(cube_state, 10, 25);
 }
 
 // Gestione della navigazione con risoluzione step-by-step
