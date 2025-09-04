@@ -1,20 +1,20 @@
 #include "ch.h"
 #include "hal.h"
 #include "chprintf.h"
-#include "gfx.h"
-#include "display.h"
+#include "rubik/cube.h"
+#include "display/display.h"
+#include "rubik/solver.h"
 
 #define CUBE_DATA_SIZE 54
 #define BAUD_RATE 115200
 
-void process_cube_data(void);
+#define JOY_CENTER_LINE PAL_LINE(GPIOC, 7)
 
-// Cube state storage - 54 raw chars
+void joystickInit(void);
+void serialInit(void);
+
 char cube_state[CUBE_DATA_SIZE];
-bool new_data_received = false;
-bool display_initialized = false;
 
-// Serial config
 static SerialConfig serial_cfg = {
     .speed = BAUD_RATE,
     .cr1 = 0,
@@ -22,7 +22,6 @@ static SerialConfig serial_cfg = {
     .cr3 = 0
 };
 
-// Thread for receiving raw cube data
 static THD_WORKING_AREA(waSerialThread, 2048);
 static THD_FUNCTION(SerialThread, arg) {
     (void)arg;
@@ -40,18 +39,9 @@ static THD_FUNCTION(SerialThread, arg) {
         cube_state[idx++] = (char)c;
 
         if (idx == CUBE_DATA_SIZE) {
-            new_data_received = true;
-            process_cube_data();
+            rubikDrawNetFromCube(cube_state, 10, 25);
             idx = 0;
         }
-    }
-}
-
-
-void process_cube_data(void) {
-    if (new_data_received) {
-        rubikDrawNetFromCube(cube_state, 10, 25);
-        new_data_received = false;
     }
 }
 
@@ -59,19 +49,30 @@ int main(void) {
     halInit();
     chSysInit();
 
-    display_init();
-
-    palSetLineMode(PAL_LINE(GPIOA, 2), PAL_MODE_ALTERNATE(7));
-    palSetLineMode(PAL_LINE(GPIOA, 3), PAL_MODE_ALTERNATE(7));
-
-    sdStart(&SD2, &serial_cfg);
-
+    displayInit();
+    joystickInit();
+    serialInit();
 
     chThdCreateStatic(waSerialThread, sizeof(waSerialThread),
                       NORMALPRIO, SerialThread, NULL);
 
     while (true) {
-        handle_navigation(cube_state);
+      if(palReadLine(JOY_CENTER_LINE) == PAL_LOW){
+        Cube cube;
+        initCube(&cube, cube_state);
+        solveCube(&cube);
+      }
         chThdSleepMilliseconds(100);
     }
+}
+
+void joystickInit(void) {
+  palSetLineMode(JOY_CENTER_LINE, PAL_MODE_INPUT_PULLUP);
+}
+
+void serialInit(void){
+  palSetLineMode(PAL_LINE(GPIOA, 2), PAL_MODE_ALTERNATE(7));
+  palSetLineMode(PAL_LINE(GPIOA, 3), PAL_MODE_ALTERNATE(7));
+
+  sdStart(&SD2, &serial_cfg);
 }

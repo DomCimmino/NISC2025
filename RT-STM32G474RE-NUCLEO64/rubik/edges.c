@@ -1,7 +1,7 @@
 #include "edges.h"
 #include "cube.h"
 
-static void solveEdges(Cube* cube) {
+void solveEdges(Cube* cube) {
   while (!checkEdges(cube)) {
     solveEdge(cube);
   }

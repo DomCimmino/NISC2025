@@ -1,7 +1,7 @@
 #include "oll.h"
 #include "cube.h"
 
-static void solveOLL(Cube* cube) {
+void solveOLL(Cube* cube) {
   if (!checkOLLEdges(cube)) {
     int state = findEdges(cube);
     while (state == 0) {

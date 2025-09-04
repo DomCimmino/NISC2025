@@ -3,7 +3,7 @@
 
 #include "cube.h"
 
-static void solveEdges(Cube* cube);
+void solveEdges(Cube* cube);
 void solveEdge(Cube* cube);
 int checkEdges(Cube* cube);
 

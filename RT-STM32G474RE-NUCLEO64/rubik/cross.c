@@ -1,7 +1,7 @@
 #include "cross.h"
 #include "cube.h"
 
-static void solveCross(Cube* cube){
+void solveCross(Cube* cube){
   while (checkCross(cube)) {
     solveCrossEdge(cube);
     }

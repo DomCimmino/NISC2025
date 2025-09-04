@@ -17,6 +17,7 @@ typedef struct {
     int cubies[6][9];
 } Cube;
 
+void initCube(Cube* cube, char cube_state[TOTAL_STICKER]);
 void moves(Cube* cube, const char* moves);
 void r(Cube* cube, int n);
 void l(Cube* cube, int n);

@@ -96,6 +96,7 @@ DEPDIR   := ./.dep
 
 GFXLIB	:= ../../ugfx
 
+DISPLAYLIB := ./display
 RUBIKLIB := ./rubik
 
 # Licensing files.
@@ -134,8 +135,8 @@ CSRC = $(ALLCSRC) \
        $(RUBIKLIB)/edges.c \
        $(RUBIKLIB)/oll.c \
        $(RUBIKLIB)/pll.c \
-       step_solver.c \
-       display.c \
+       $(RUBIKLIB)/solver.c \
+       $(DISPLAYLIB)/display.c \
        main.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global

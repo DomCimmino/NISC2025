@@ -1,7 +1,7 @@
 #include "cube.h"
 #include <string.h>
 
-void init_cube(Cube* cube, char cube_state[TOTAL_STICKER]){
+void initCube(Cube* cube, char cube_state[TOTAL_STICKER]){
   for(int j=0; j<TOTAL_STICKER; j++){
       if(j>=0 && j<=8){
         cube->cubies[U][j] = cube_state[j];
