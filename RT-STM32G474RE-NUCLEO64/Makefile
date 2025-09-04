@@ -132,6 +132,7 @@ CSRC = $(ALLCSRC) \
        $(RUBIKLIB)/cross.c \
        $(RUBIKLIB)/corners.c \
        $(RUBIKLIB)/edges.c \
+       $(RUBIKLIB)/oll.c \
        step_solver.c \
        display.c \
        main.c
