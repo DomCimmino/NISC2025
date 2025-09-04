@@ -26,7 +26,7 @@ void init_cube(Cube* cube, char cube_state[TOTAL_STICKER]){
 void createTempCubies(Cube* cube, int cubies[NUM_CUBE_STICKER_PER_FACE][NUM_CUBE_FACE]){
   for (int i=0;i<NUM_CUBE_STICKER_PER_FACE;++i) {
     for (int j=0;j<NUM_CUBE_FACE;++j) {
-      newCubies[i][j] = cube->cubies[i][j];
+      cubies[i][j] = cube->cubies[i][j];
     }
   }
 }
@@ -256,36 +256,64 @@ void b(Cube* cube, int n){
     for(int i=0; i<n; i++){
 
       //Yellow->Blue
-      newCubies[6][5] = Cube::cubies[0][1];
-      newCubies[3][5] = Cube::cubies[1][1];
-      newCubies[0][5] = Cube::cubies[2][1];
+      newCubies[6][5] = cube->cubies[0][1];
+      newCubies[3][5] = cube->cubies[1][1];
+      newCubies[0][5] = cube->cubies[2][1];
 
       //Blue->White
-      newCubies[6][0] = Cube::cubies[0][5];
-      newCubies[7][0] = Cube::cubies[3][5];
-      newCubies[8][0] = Cube::cubies[6][5];
+      newCubies[6][0] = cube->cubies[0][5];
+      newCubies[7][0] = cube->cubies[3][5];
+      newCubies[8][0] = cube->cubies[6][5];
 
       //White->Green
-      newCubies[8][3] = Cube::cubies[6][0];
-      newCubies[5][3] = Cube::cubies[7][0];
-      newCubies[2][3] = Cube::cubies[8][0];
+      newCubies[8][3] = cube->cubies[6][0];
+      newCubies[5][3] = cube->cubies[7][0];
+      newCubies[2][3] = cube->cubies[8][0];
 
       //Green->Yellow
-      newCubies[0][1] = Cube::cubies[2][3];
-      newCubies[1][1] = Cube::cubies[5][3];
-      newCubies[2][1] = Cube::cubies[8][3];
+      newCubies[0][1] = cube->cubies[2][3];
+      newCubies[1][1] = cube->cubies[5][3];
+      newCubies[2][1] = cube->cubies[8][3];
 
       //Rotate Orange
-      newCubies[0][4] = Cube::cubies[6][4];
-      newCubies[1][4] = Cube::cubies[3][4];
-      newCubies[2][4] = Cube::cubies[0][4];
-      newCubies[3][4] = Cube::cubies[7][4];
-      newCubies[5][4] = Cube::cubies[1][4];
-      newCubies[6][4] = Cube::cubies[8][4];
-      newCubies[7][4] = Cube::cubies[5][4];
-      newCubies[8][4] = Cube::cubies[2][4];
+      newCubies[0][4] = cube->cubies[6][4];
+      newCubies[1][4] = cube->cubies[3][4];
+      newCubies[2][4] = cube->cubies[0][4];
+      newCubies[3][4] = cube->cubies[7][4];
+      newCubies[5][4] = cube->cubies[1][4];
+      newCubies[6][4] = cube->cubies[8][4];
+      newCubies[7][4] = cube->cubies[5][4];
+      newCubies[8][4] = cube->cubies[2][4];
 
       setCube(&cube, newCubies);
     }
   }
+}
+
+void output(Cube* cube, char* cube_state[TOTAL_STICKER]){
+  int idx = 0;
+
+      // U face
+      for (int j = 0; j < 9; j++)
+          cube_state[idx++] = cube->cubies[U][j];
+
+      // R face
+      for (int j = 0; j < 9; j++)
+          cube_state[idx++] = cube->cubies[R][j];
+
+      // F face
+      for (int j = 0; j < 9; j++)
+          cube_state[idx++] = cube->cubies[F][j];
+
+      // D face
+      for (int j = 0; j < 9; j++)
+          cube_state[idx++] = cube->cubies[D][j];
+
+      // L face
+      for (int j = 0; j < 9; j++)
+          cube_state[idx++] = cube->cubies[L][j];
+
+      // B face
+      for (int j = 0; j < 9; j++)
+          cube_state[idx++] = cube->cubies[B][j];
 }

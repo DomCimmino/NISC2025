@@ -17,17 +17,13 @@ typedef struct {
     int cubies[6][9];
 } Cube;
 
-static void solveCross(Cube* cube);
-static int checkCross(Cube* cube);
-static void solveEdge(Cube* cube);
-
 void moves(char moves[]);
-void output();
 void r(Cube* cube, int n);
 void l(Cube* cube, int n);
 void u(Cube* cube, int n);
 void d(Cube* cube, int n);
 void f(Cube* cube, int n);
 void b(Cube* cube, int n);
+void output(Cube* cube, char* cube_state[TOTAL_STICKER]);
 
 #endif

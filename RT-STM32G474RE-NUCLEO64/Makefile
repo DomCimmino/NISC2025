@@ -126,6 +126,7 @@ LDSCRIPT= $(STARTUPLD)/STM32G474xE.ld
 CSRC = $(ALLCSRC) \
        $(TESTSRC) \
        $(GFXSRC) \
+       cube.c \
        step_solver.c \
        display.c \
        main.c
