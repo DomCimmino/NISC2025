@@ -3,13 +3,14 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "gfx.h"
 
 #define R_SIZE 3
 #define FACE_CNT 6
 
 void display_init(void);
 
-void drawCubeNet(uint8_t cube_state[54], int ox, int oy);
+void rubikDrawNetFromCube(char cube_state[54], gCoord ox, gCoord oy);
 
 void handle_navigation(char cube_state[54]);
 

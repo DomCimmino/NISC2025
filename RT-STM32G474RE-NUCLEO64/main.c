@@ -1,13 +1,14 @@
 #include "ch.h"
 #include "hal.h"
 #include "chprintf.h"
+#include "gfx.h"
 #include "display.h"
 
 #define CUBE_DATA_SIZE 54
 #define BAUD_RATE 115200
 
 // Cube state storage - 54 raw chars
-uint8_t cube_state[CUBE_DATA_SIZE];
+char cube_state[CUBE_DATA_SIZE];
 bool new_data_received = false;
 bool display_initialized = false;
 
@@ -47,13 +48,6 @@ static THD_FUNCTION(SerialThread, arg) {
 void process_cube_data(void) {
     if (new_data_received) {
         chprintf((BaseSequentialStream *)&SD2, "Cube state received:\r\n");
-
-        for (int i = 0; i < CUBE_DATA_SIZE; i++) {
-            chprintf((BaseSequentialStream *)&SD2, "%c ", cube_state[i]);
-            if ((i + 1) % 9 == 0) {
-                chprintf((BaseSequentialStream *)&SD2, "\r\n");
-            }
-        }
 
         rubikDrawNetFromCube(cube_state, 10, 10);
 

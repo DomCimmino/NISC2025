@@ -21,6 +21,12 @@
 static gColor kPalette[COL_CNT];
 static unsigned char stickers[FACE_CNT][R_SIZE][R_SIZE];
 
+// Variabili per la risoluzione step-by-step
+static StepSolver solver;
+static bool solving = false;
+static bool solution_complete = false;
+static uint32_t last_press_time = 0;
+
 static void initPalette(void) {
     kPalette[COL_W] = GFX_WHITE;
     kPalette[COL_Y] = GFX_YELLOW;
@@ -46,7 +52,7 @@ void rubikInit(void) {
 
 void display_init(void) {
     gfxInit();
-    initPalette();
+    rubikInit();
     gdispClear(GFX_BLACK);
 }
 
@@ -121,21 +127,85 @@ static bool is_center_pressed(void) {
     return is_button_pressed(JOY_PORT_2, JOY_CENTRE_PIN);
 }
 
+static bool is_right_pressed(void){
+    return is_button_pressed(JOY_PORT_1, JOY_RIGHT_PIN);
+}
+
+// Funzione per visualizzare lo stato del solver
+void display_solver_status(void) {
+    // Pulisci l'area di testo
+    gdispFillArea(0, 0, gdispGetWidth(), 20, GFX_BLACK);
+
+    // Mostra lo stato corrente
+    gdispDrawString(10, 5, solver_get_state_name(solver.current_state),
+                   NULL, GFX_WHITE);
+
+    // Mostra la mossa corrente
+    gdispDrawString(150, 5, solver_get_current_move(),
+                   NULL, GFX_YELLOW);
+
+    if (solution_complete) {
+        gdispDrawString(250, 5, "COMPLETATO!",
+                       NULL, GFX_GREEN);
+    }
+}
+
+// Inizia la risoluzione
+void start_solution(char cube_state[54]) {
+    solver_init(&solver, cube_state);
+    solving = true;
+    solution_complete = false;
+}
+
+// Esegue un passo della risoluzione
+void execute_solution_step(char cube_state[54]) {
+    if (!solving || solution_complete) return;
+
+    // Esegui un passo
+    solution_complete = solver_execute_step(&solver);
+
+    // Aggiorna lo stato del cubo
+    memcpy(cube_state, solver.cube_state, 54);
+
+    // Aggiorna il display
+    display_solver_status();
+}
+
+// Gestione della navigazione con risoluzione step-by-step
 void handle_navigation(char cube_state[54]) {
-    static uint32_t last_press_time = 0;
-    static bool solving = false;
     uint32_t current_time = chVTGetSystemTime();
 
-    if (current_time - last_press_time < TIME_MS2I(200)) {
+    // Debounce
+    if (current_time - last_press_time < TIME_MS2I(300)) {
         return;
     }
 
+    // Tasto centrale: inizia la risoluzione
     if (is_center_pressed()) {
         last_press_time = current_time;
         if (!solving) {
-            solving = true;
-            solve_cube_step_by_step((char *)cube_state, 400);
-            solving = false;
+            start_solution(cube_state);
+            display_solver_status();
         }
+    }
+
+    // Tasto destro: esegui passo successivo
+    if (is_right_pressed() && solving) {
+        last_press_time = current_time;
+        execute_solution_step(cube_state);
+    }
+}
+
+// Funzione principale per la risoluzione step-by-step
+void solve_cube_step_by_step(char cube_state[54], uint16_t delay_ms) {
+    (void)delay_ms; // Non usiamo il delay in modalità step-by-step
+
+    // Inizializza il solver
+    start_solution(cube_state);
+
+    // Loop principale (verrà gestito da handle_navigation)
+    while (!solution_complete) {
+        // La gestione dei passi avviene tramite handle_navigation
+        chThdSleepMilliseconds(100);
     }
 }

@@ -53,7 +53,11 @@ class STM32Communicator:
         self.connected = False
     
     def send_cube_state(self, cube_state):
-        """Send cube state as 54 raw chars"""
+        """
+        Send cube state as 54 raw chars in the fixed order:
+        U(0..8), R(9..17), F(18..26), D(27..35), L(36..44), B(45..53)
+        with colors mapped to letters: W,Y,R,O,B,G
+        """
         if not self.connected:
             raise Exception("Not connected to STM32")
     
@@ -61,12 +65,20 @@ class STM32Communicator:
             self.serial_port.reset_input_buffer()
             self.serial_port.reset_output_buffer()
     
-            # Convert numeric cube state → chars
+            # Fissa l'ordine delle facce
+            face_order = ['U', 'R', 'F', 'D', 'L', 'B']
+    
+            # Mappa numeri → lettere
             color_map = {0: 'W', 1: 'Y', 2: 'R', 3: 'O', 4: 'B', 5: 'G'}
-            char_data = ''.join(color_map.get(v, '?') for v in cube_state.to_serial_format())
+    
+            # Costruisci la stringa in modo preciso
+            char_data = ''
+            for face in face_order:
+                # Flatten row-major (riga per riga)
+                char_data += ''.join(color_map[v] for v in cube_state.faces[face].flatten())
     
             if len(char_data) != 54:
-                raise ValueError("Cube state must be 54 chars")
+                raise ValueError(f"Cube state must be 54 chars, got {len(char_data)}")
     
             print(f"Sending raw cube state: {char_data}")
             self.serial_port.write(char_data.encode())
@@ -78,8 +90,6 @@ class STM32Communicator:
             return False
     
         return True
-
-
 
     def receive_data(self):
         """Receive data from STM32"""
