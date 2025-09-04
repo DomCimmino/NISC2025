@@ -41,7 +41,7 @@ void setCube(Cube* cube, int cubies[NUM_CUBE_STICKER_PER_FACE][NUM_CUBE_FACE]){
 }
 
 void moves(Cube* cube, const char* moves){
-  for (int i=0; i<strlen(moves); ++i) {
+  for (size_t i=0; i<strlen(moves); ++i) {
       switch (moves[i]) {
         case 'U':
           u(cube, 1);
@@ -316,7 +316,7 @@ void b(Cube* cube, int n){
   }
 }
 
-void output(Cube* cube, char* cube_state[TOTAL_STICKER]){
+void output(Cube* cube, char cube_state[TOTAL_STICKER]){
   int idx = 0;
 
       // U face

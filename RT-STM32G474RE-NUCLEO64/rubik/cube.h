@@ -24,6 +24,6 @@ void u(Cube* cube, int n);
 void d(Cube* cube, int n);
 void f(Cube* cube, int n);
 void b(Cube* cube, int n);
-void output(Cube* cube, char* cube_state[TOTAL_STICKER]);
+void output(Cube* cube, char cube_state[TOTAL_STICKER]);
 
 #endif
