@@ -35,4 +35,5 @@ void solveCube(Cube* cube){
   output(cube, cube_state);
   rubikDrawNetFromCube(cube_state, 10, 25);
 
+  displayString("Completed");
 }
