@@ -388,20 +388,27 @@ class CubeUI(QMainWindow):
         self.statusBar().showMessage("Set all faces to solved state")
     
     def generate_random_solvable(self):
-        """Generate a random but solvable cube configuration"""
+        """Generate a random solvable cube configuration from scrambles.txt"""
         # Start with a solved cube
         self.set_all_solved()
-        
-        # Apply a series of random moves to scramble it
-        moves = ["U", "U'", "D", "D'", "F", "F'", "B", "B'", "L", "L'", "R", "R'"]
-        num_moves = random.randint(10, 20)  # Apply 10-20 random moves
-        
-        for _ in range(num_moves):
-            move = random.choice(moves)
+    
+        # Carica tutte le sequenze dal file
+        with open("scrambles.txt", "r") as f:
+            scrambles = [line.strip() for line in f if line.strip()]
+    
+        # Scegli una sequenza casuale
+        scramble = random.choice(scrambles)
+        moves = scramble.split()
+    
+        # Applica le mosse della sequenza
+        for move in moves:
             self.apply_move(move)
-        
+    
+        # Aggiorna la GUI
         self.load_face(self.current_face)
-        self.statusBar().showMessage(f"Generated random solvable configuration ({num_moves} moves)")
+        self.statusBar().showMessage(
+            f"Generated solvable configuration from scramble ({len(moves)} moves)"
+        )
     
     def apply_move(self, move):
         """Apply a cube move to the current state"""
