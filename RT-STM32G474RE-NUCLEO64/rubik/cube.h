@@ -7,16 +7,8 @@
 #define NUM_CUBE_STICKER_PER_FACE 9
 #define TOTAL_STICKER 54
 
-#define U 0
-#define D 1
-#define R 2
-#define F 3
-#define L 4
-#define B 5
-
-
 typedef struct {
-    int cubies[6][9];
+    int cubies[9][6];
 } Cube;
 
 void initCube(Cube* cube, char cube_state[TOTAL_STICKER]);
