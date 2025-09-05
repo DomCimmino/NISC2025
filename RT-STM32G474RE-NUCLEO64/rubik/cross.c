@@ -25,7 +25,7 @@ int checkCross(Cube* cube){
 void solveCrossEdge(Cube* cube){
   for (int side=0; side<6; ++side) {
     for (int edge = 1; edge<9; edge+=2) {
-      if (cube->cubies[edge][side] == 0) {
+      if (cube->cubies[side][edge] == 0) {
         //Solve edge
 
         switch (side) {
