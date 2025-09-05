@@ -2,24 +2,25 @@
 #include <string.h>
 
 void initCube(Cube* cube, char cube_state[TOTAL_STICKER]){
+
   for(int j=0; j<TOTAL_STICKER; j++){
       if(j>=0 && j<=8){
-        cube->cubies[U][j] = cube_state[j];
+        cube->cubies[U][j] = sticketToInt(cube_state[j]);
       }
       if(j>=9 && j<=17){
-        cube->cubies[R][j] = cube_state[j];
+        cube->cubies[R][j] = sticketToInt(cube_state[j]);
       }
       if(j>=18 && j<=26){
-        cube->cubies[F][j] = cube_state[j];
+        cube->cubies[F][j] = sticketToInt(cube_state[j]);
       }
       if(j>=27 && j<=35){
-        cube->cubies[D][j] = cube_state[j];
+        cube->cubies[D][j] = sticketToInt(cube_state[j]);
       }
       if(j>=36 && j<=44){
-        cube->cubies[L][j] = cube_state[j];
+        cube->cubies[L][j] = sticketToInt(cube_state[j]);
       }
       if(j>=45 && j<=53){
-        cube->cubies[B][j] = cube_state[j];
+        cube->cubies[B][j] = sticketToInt(cube_state[j]);
       }
   }
 }
@@ -321,25 +322,63 @@ void output(Cube* cube, char cube_state[TOTAL_STICKER]){
 
       // U face
       for (int j = 0; j < 9; j++)
-          cube_state[idx++] = cube->cubies[U][j];
+          cube_state[idx++] = intToSticker(cube->cubies[U][j]);
 
       // R face
       for (int j = 0; j < 9; j++)
-          cube_state[idx++] = cube->cubies[R][j];
+          cube_state[idx++] = intToSticker(cube->cubies[R][j]);
 
       // F face
       for (int j = 0; j < 9; j++)
-          cube_state[idx++] = cube->cubies[F][j];
+          cube_state[idx++] = intToSticker(cube->cubies[F][j]);
 
       // D face
       for (int j = 0; j < 9; j++)
-          cube_state[idx++] = cube->cubies[D][j];
+          cube_state[idx++] = intToSticker(cube->cubies[D][j]);
 
       // L face
       for (int j = 0; j < 9; j++)
-          cube_state[idx++] = cube->cubies[L][j];
+          cube_state[idx++] = intToSticker(cube->cubies[L][j]);
 
       // B face
       for (int j = 0; j < 9; j++)
-          cube_state[idx++] = cube->cubies[B][j];
+          cube_state[idx++] = intToSticker(cube->cubies[B][j]);
+}
+
+int sticketToInt(char sticker){
+  switch(sticker){
+  case 'W':
+    return 0;
+  case 'Y':
+    return 1;
+  case 'R':
+    return 2;
+  case 'G':
+    return 3;
+  case 'O':
+    return 4;
+  case 'B':
+    return 5;
+  default:
+    return -1;
+  }
+}
+
+char intToSticker(int color){
+  switch(color){
+  case 0:
+    return 'W';
+  case 1:
+    return 'Y';
+  case 2:
+    return 'R';
+  case 3:
+    return 'G';
+  case 4:
+    return 'O';
+  case 5:
+    return 'B';
+  default:
+    return '-';
+  }
 }

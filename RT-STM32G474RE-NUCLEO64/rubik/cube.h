@@ -1,6 +1,8 @@
 #ifndef CUBE_H
 #define CUBE_H
 
+#include <stdint.h>
+
 #define NUM_CUBE_FACE 6
 #define NUM_CUBE_STICKER_PER_FACE 9
 #define TOTAL_STICKER 54
@@ -26,5 +28,7 @@ void d(Cube* cube, int n);
 void f(Cube* cube, int n);
 void b(Cube* cube, int n);
 void output(Cube* cube, char cube_state[TOTAL_STICKER]);
+int sticketToInt(char sticker);
+char intToSticker(int color);
 
 #endif
