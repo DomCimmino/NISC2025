@@ -4,6 +4,7 @@
 #include "rubik/cube.h"
 #include "display/display.h"
 #include "rubik/solver.h"
+#include "music/music.h"
 
 #define CUBE_DATA_SIZE 54
 #define BAUD_RATE 115200
@@ -52,6 +53,7 @@ int main(void) {
     displayInit();
     joystickInit();
     serialInit();
+    musicInit();
 
     chThdCreateStatic(waSerialThread, sizeof(waSerialThread),
                       NORMALPRIO, SerialThread, NULL);
@@ -61,6 +63,7 @@ int main(void) {
         Cube cube;
         initCube(&cube, cube_state);
         solveCube(&cube);
+        playMusic();
       }
         chThdSleepMilliseconds(100);
     }

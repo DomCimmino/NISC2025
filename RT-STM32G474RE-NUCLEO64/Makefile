@@ -97,6 +97,7 @@ DEPDIR   := ./.dep
 GFXLIB	:= ../../ugfx
 
 DISPLAYLIB := ./display
+MUSICLIB := ./music
 RUBIKLIB := ./rubik
 
 # Licensing files.
@@ -127,7 +128,6 @@ LDSCRIPT= $(STARTUPLD)/STM32G474xE.ld
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CSRC = $(ALLCSRC) \
-       $(TESTSRC) \
        $(GFXSRC) \
        $(RUBIKLIB)/cube.c \
        $(RUBIKLIB)/cross.c \
@@ -137,6 +137,7 @@ CSRC = $(ALLCSRC) \
        $(RUBIKLIB)/pll.c \
        $(RUBIKLIB)/solver.c \
        $(DISPLAYLIB)/display.c \
+       $(MUSICLIB)/music.c \
        main.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global

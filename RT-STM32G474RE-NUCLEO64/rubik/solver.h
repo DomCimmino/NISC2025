@@ -1,7 +1,7 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
-#include "Cube.h"
+#include "cube.h"
 
 void solveCube(Cube* cube);
 
